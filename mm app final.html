@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Muscle &amp; Meal</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&family=Noto+Sans+JP:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#111;--paper:#f8f4ed;--paper2:#f0ead9;--paper3:#e8dfc8;
+  --rule:#c5b99a;--rule2:#a89878;
+  --red:#b83232;--red-bg:#fdf0f0;--red-border:#e8c0c0;
+  --grn:#1e6b3a;--grn-bg:#f0f8f2;--grn-border:#aad4b8;
+  --blu:#1b4f82;--blu-bg:#f0f4fc;--blu-border:#a8c0e0;
+  --pur:#5c3487;--pur-bg:#f4f0fc;--pur-border:#c4a8e4;
+  --amb:#9a5210;--amb-bg:#fdf6ec;--amb-border:#e0c090;
+  --r:10px;--rs:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{
+  background:var(--paper);color:var(--ink);
+  font-family:'Noto Sans JP',sans-serif;
+  font-size:13px;
+  padding-bottom:60px;
+}
+/* ── APP SHELL ── */
+.shell{max-width:430px;width:100%;margin:0 auto;position:relative}
+/* ── HEADER ── */
+.hdr{
+  border-bottom:3px double var(--ink);
+  padding:12px 16px 10px;
+  background:var(--paper);
+  position:sticky;
+  top:0;
+  z-index:50;
+}
+.hdr-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+.hdr-date{font-family:'DM Mono',monospace;font-size:9px;color:var(--rule2);letter-spacing:.1em;text-transform:uppercase}
+.hdr-phase{font-family:'DM Mono',monospace;font-size:9px;background:var(--ink);color:var(--paper);padding:2px 7px;border-radius:2px;letter-spacing:.06em}
+.hdr-title{font-family:'Noto Serif JP',serif;font-size:20px;font-weight:900;line-height:1.1;letter-spacing:-.01em}
+.hdr-sub{font-size:10px;color:var(--rule2);margin-top:2px;font-family:'DM Mono',monospace}
+/* ── BOTTOM NAV ── */
+.bnav{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  background:var(--ink);
+  display:flex;
+  z-index:100;
+  max-width:430px;
+  margin:0 auto;
+  border-top:1px solid #333;
+}
+.nb{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  padding:9px 4px 12px;border:none;background:transparent;
+  color:#777;cursor:pointer;
+  font-family:'Noto Sans JP',sans-serif;font-size:10px;
+  gap:4px;transition:color .15s;letter-spacing:.05em;
+  touch-action:manipulation;
+  -webkit-appearance:none;
+  min-height:48px;
+}
+.nb:active{background:rgba(255,255,255,0.1)}
+.nb.on{color:#f8f4ed}
+.nb-ico{font-size:16px;line-height:1}
+/* ── SCROLL AREA ── */
+.scroll{padding-bottom:8px}
+/* ── PAGES ── */
+.pg{display:none}.pg.on{display:block}
+/* ── LABELS ── */
+.lbl{
+  font-family:'DM Mono',monospace;font-size:9px;font-weight:500;
+  color:var(--rule2);text-transform:uppercase;letter-spacing:.12em;
+  padding:13px 16px 6px;border-bottom:1px solid var(--rule);
+  margin-bottom:0;
+}
+/* ── WEEK SCROLLER ── */
+.wscroll{overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:0 0 2px}
+.wscroll::-webkit-scrollbar{display:none}
+.wtrack{display:flex;width:max-content;padding:10px 16px;gap:10px}
+/* ── DAY CARD ── */
+.dcard{
+  width:300px;flex-shrink:0;
+  background:white;
+  border:1.5px solid var(--rule);
+  border-radius:var(--r);
+  overflow:hidden;
+}
+.dcard.now{border-color:var(--ink);border-width:2px;box-shadow:3px 3px 0 var(--ink)}
+.dcard-hdr{
+  padding:8px 11px 7px;
+  border-bottom:1.5px solid var(--rule);
+  display:flex;align-items:center;gap:8px;
+  background:var(--paper2);
+}
+.dnum{font-family:'DM Mono',monospace;font-size:19px;font-weight:500;line-height:1;color:var(--ink)}
+.dlwrap{flex:1}
+.dlname{font-family:'DM Mono',monospace;font-size:9px;color:var(--rule2)}
+.dltype{font-family:'Noto Serif JP',serif;font-size:12px;font-weight:700}
+.dtag{font-family:'DM Mono',monospace;font-size:8px;padding:2px 6px;border-radius:2px;font-weight:500}
+.dcard-body{padding:9px 11px 10px}
+/* exercises */
+.ex-lbl{font-family:'DM Mono',monospace;font-size:8px;color:var(--rule2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.exrow{display:block;padding:6px 0;border-bottom:1px solid var(--paper3);font-size:11px}
+.exrow:last-child{border-bottom:none}
+.exrow-head{display:flex;align-items:flex-start;gap:5px;margin-bottom:3px}
+.exdot{width:3px;height:3px;border-radius:50%;background:var(--ink);flex-shrink:0;margin-top:5px}
+.exn{font-weight:700;flex:1}
+.exs{font-family:'DM Mono',monospace;font-size:9px;color:var(--rule2);white-space:nowrap;background:var(--paper2);padding:1px 5px;border-radius:2px}
+.exhow{font-size:10px;color:#555;line-height:1.45;padding-left:8px;margin-bottom:2px}
+.extip{font-size:10px;color:var(--amb);line-height:1.45;padding-left:8px;background:var(--amb-bg);border-left:2px solid var(--amb);padding:3px 6px;margin-top:3px;border-radius:0 3px 3px 0}
+/* meals */
+.msec{margin-top:8px}
+.mlbl{font-family:'DM Mono',monospace;font-size:8px;color:var(--rule2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.mitem{border-radius:var(--rs);overflow:hidden;margin-bottom:4px}
+.mitem:last-child{margin-bottom:0}
+.mstrip{font-family:'DM Mono',monospace;font-size:8px;font-weight:700;padding:2px 7px;color:white;letter-spacing:.06em}
+.mbody{padding:5px 7px 6px;border:1px solid;border-top:none;border-radius:0 0 var(--rs) var(--rs)}
+.mname{font-weight:700;font-size:11px;line-height:1.3;margin-bottom:2px}
+.mdetail{font-size:10px;color:#666;line-height:1.4;margin-bottom:3px}
+.malt{font-size:9px;color:#aaa;margin-bottom:3px}
+.mmacros{display:flex;gap:3px;flex-wrap:wrap}
+.mpill{font-family:'DM Mono',monospace;font-size:9px;padding:1px 5px;border-radius:2px;font-weight:500}
+/* meal themes */
+.m朝食 .mstrip{background:var(--red)}.m朝食 .mbody{background:var(--red-bg);border-color:var(--red-border)}.m朝食 .mpill{background:#fde0e0;color:var(--red)}
+.m昼食 .mstrip{background:var(--grn)}.m昼食 .mbody{background:var(--grn-bg);border-color:var(--grn-border)}.m昼食 .mpill{background:#d4eedd;color:var(--grn)}
+.m夕食 .mstrip{background:var(--blu)}.m夕食 .mbody{background:var(--blu-bg);border-color:var(--blu-border)}.m夕食 .mpill{background:#d0e4f4;color:var(--blu)}
+.m補食 .mstrip{background:var(--pur)}.m補食 .mbody{background:var(--pur-bg);border-color:var(--pur-border)}.m補食 .mpill{background:#e4d8f4;color:var(--pur)}
+.m間食 .mstrip{background:var(--amb)}.m間食 .mbody{background:var(--amb-bg);border-color:var(--amb-border)}.m間食 .mpill{background:#fce8d0;color:var(--amb)}
+/* ── PREP CARD ── */
+.prep-card{
+  margin:10px 16px 0;
+  border:2px solid var(--ink);
+  border-radius:var(--r);
+  overflow:hidden;
+  box-shadow:3px 3px 0 var(--ink);
+  background:white;
+}
+.prep-hdr{background:var(--ink);color:var(--paper);padding:8px 12px;font-family:'Noto Serif JP',serif;font-size:12px;font-weight:700}
+.prep-body{padding:10px 12px}
+.prep-rice{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:2px solid var(--rule);margin-bottom:8px}
+.prep-rice-ico{font-size:24px}
+.prep-rice-amt{font-family:'DM Mono',monospace;font-size:24px;font-weight:500;color:var(--amb)}
+.prep-rice-note{font-size:10px;color:var(--rule2);margin-top:1px}
+.prep-slbl{font-family:'DM Mono',monospace;font-size:8px;color:var(--rule2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
+.pitem{display:flex;gap:8px;align-items:flex-start;padding:5px 0;border-bottom:1px solid var(--paper3);font-size:12px}
+.pitem:last-child{border-bottom:none}
+.pitem input[type=checkbox]{width:14px;height:14px;margin-top:2px;flex-shrink:0;accent-color:var(--ink);cursor:pointer}
+.pitem label{flex:1;cursor:pointer;line-height:1.4}
+.pitem label.ck{text-decoration:line-through;color:#bbb}
+.cook-item{font-size:11px;color:#666;padding:3px 0;border-bottom:1px solid var(--paper3)}
+.cook-item:last-child{border-bottom:none}
+/* ── LOG FORM ── */
+.fsec{padding:0 16px;margin-bottom:12px}
+.fcard{background:white;border:1.5px solid var(--rule);border-radius:var(--r);padding:11px 13px;box-shadow:2px 2px 0 var(--rule)}
+.flbl{font-family:'DM Mono',monospace;font-size:8px;font-weight:500;color:var(--rule2);text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:3px}
+input[type=text],input[type=number],select,textarea{
+  background:var(--paper2);border:1.5px solid var(--rule2);border-radius:var(--rs);
+  color:var(--ink);font-family:'Noto Sans JP',sans-serif;font-size:13px;
+  padding:7px 9px;width:100%;
+}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ink);background:white}
+textarea{resize:vertical;min-height:52px;line-height:1.5}
+.frow{display:flex;gap:6px;margin-bottom:8px}
+.frow>*{flex:1;margin-bottom:0}
+.fgrp{margin-bottom:8px}
+/* ── AI PFC SECTION ── */
+.pfc-ai-wrap{background:var(--paper2);border-radius:var(--rs);padding:9px 11px;margin-top:8px;border:1.5px solid var(--rule)}
+.pfc-ai-title{font-family:'DM Mono',monospace;font-size:8px;color:var(--rule2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.ai-badge{background:var(--ink);color:var(--paper);font-size:8px;padding:1px 6px;border-radius:2px;font-family:'DM Mono',monospace}
+.meal-input-row{
+  display:flex;gap:6px;align-items:flex-end;margin-bottom:6px;
+  background:white;border:1px solid var(--rule);border-radius:var(--rs);padding:7px 8px;
+}
+.meal-input-row.loading{opacity:.6}
+.mit-body{flex:1;min-width:0}
+.mit-timing{font-family:'DM Mono',monospace;font-size:8px;color:var(--rule2);margin-bottom:3px}
+.mit-name{font-size:13px;font-weight:500}
+.mit-pfc{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
+.mit-pill{font-family:'DM Mono',monospace;font-size:9px;padding:1px 5px;border-radius:2px}
+.mit-pill.p{background:var(--red-bg);color:var(--red)}
+.mit-pill.c{background:var(--grn-bg);color:var(--grn)}
+.mit-pill.f{background:var(--amb-bg);color:var(--amb)}
+.mit-pill.q{background:var(--paper3);color:var(--rule2);font-style:italic}
+.mit-del{background:none;border:none;color:var(--rule2);font-size:15px;cursor:pointer;padding:0;flex-shrink:0;width:20px;height:20px;display:flex;align-items:center;justify-content:center}
+/* add meal UI */
+.meal-add-row{display:flex;gap:6px;align-items:flex-end;margin-bottom:8px}
+.meal-add-row select{width:auto;flex-shrink:0;font-size:12px;padding:6px 8px}
+.meal-add-row input{flex:1}
+.meal-add-row button{flex-shrink:0;padding:7px 10px;border:none;background:var(--ink);color:var(--paper);border-radius:var(--rs);font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;white-space:nowrap}
+.meal-add-row button:disabled{opacity:.5;cursor:default}
+/* pfc totals */
+.pfc-totals{display:flex;gap:5px;margin-top:8px;padding-top:8px;border-top:1px solid var(--rule)}
+.pt{flex:1;text-align:center;background:white;border-radius:var(--rs);padding:5px 3px;border:1px solid var(--rule)}
+.pt-l{font-family:'DM Mono',monospace;font-size:8px;color:var(--rule2)}
+.pt-v{font-family:'DM Mono',monospace;font-size:14px;font-weight:500}
+.pfc-progress{margin-top:6px}
+.pfc-progress-row{display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:8px;color:var(--rule2);margin-bottom:2px}
+.pfc-bar-track{height:4px;background:var(--rule);border-radius:2px;overflow:hidden}
+.pfc-bar-fill{height:4px;background:var(--red);border-radius:2px;transition:width .4s}
+/* ── TEMPLATE ── */
+.tmpl-wrap{margin:0 16px 14px;border:2px solid var(--ink);border-radius:var(--r);overflow:hidden;box-shadow:2px 2px 0 var(--ink)}
+.tmpl-hdr{background:var(--ink);color:var(--paper);padding:8px 12px;font-size:11px;font-weight:700;display:flex;justify-content:space-between;align-items:center;font-family:'Noto Serif JP',serif}
+.tmpl-body{padding:10px 12px;background:white}
+.tmpl-body pre{font-family:'DM Mono',monospace;font-size:10px;white-space:pre-wrap;word-break:break-word;background:var(--paper2);border-radius:var(--rs);padding:9px;border:1px solid var(--rule);line-height:1.6}
+.copy-btn{background:var(--paper);color:var(--ink);border:none;border-radius:2px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Mono',monospace;letter-spacing:.05em;touch-action:manipulation;-webkit-appearance:none;min-height:32px}
+/* ── BUTTONS ── */
+button{touch-action:manipulation;-webkit-appearance:none;-webkit-tap-highlight-color:rgba(0,0,0,0.1)}
+.btn{border-radius:var(--rs);padding:14px;font-size:14px;font-weight:700;font-family:'Noto Sans JP',sans-serif;cursor:pointer;width:100%;border:none;transition:opacity .15s;letter-spacing:.03em;min-height:48px}
+.btn-ink{background:var(--ink);color:var(--paper)}.btn-ink:active{opacity:.7}
+/* ── HISTORY ── */
+.hist-item{margin:0 16px 8px;background:white;border:1px solid var(--rule);border-radius:var(--r);padding:10px 12px}
+.hist-date{font-family:'DM Mono',monospace;font-size:9px;color:var(--rule2);margin-bottom:3px}
+.hist-title{font-family:'Noto Serif JP',serif;font-size:13px;font-weight:700;margin-bottom:3px}
+.hist-body{font-size:11px;color:#666;line-height:1.5}
+/* ── MISC ── */
+.empty{text-align:center;padding:28px 16px;color:#ccc;font-family:'DM Mono',monospace;font-size:11px}
+.spinner{display:inline-block;width:10px;height:10px;border:2px solid var(--rule);border-top-color:var(--ink);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-left:5px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.notice{background:var(--blu-bg);border:1px solid var(--blu-border);border-radius:var(--rs);padding:8px 10px;font-size:11px;color:var(--blu);margin:10px 16px 0;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <div class="hdr-top">
+      <div class="hdr-date" id="hdr-date"></div>
+      <div class="hdr-phase" id="hdr-phase"></div>
+    </div>
+    <div class="hdr-title" id="hdr-title"></div>
+    <div class="hdr-sub" id="hdr-sub"></div>
+  </div>
+
+  <!-- SCROLL -->
+  <div class="scroll">
+
+    <!-- ── WEEK PAGE ── -->
+    <div id="pg-week" class="pg on">
+      <div class="lbl">今週のスケジュール →</div>
+      <div class="wscroll"><div class="wtrack" id="wtrack"></div></div>
+      <div class="lbl" style="margin-top:4px">今夜の準備</div>
+      <div id="prep-sec"></div>
+    </div>
+
+    <!-- ── LOG PAGE ── -->
+    <div id="pg-log" class="pg">
+      <div class="lbl">今日を記録する</div>
+
+      <div class="fsec" style="margin-top:10px">
+        <div class="fcard">
+          <label class="flbl">筋トレメニュー</label>
+          <div class="fgrp">
+            <select id="log-day">
+              <option value="土：腹筋">土：腹筋＋有酸素</option>
+              <option value="日：休養">日：完全休養日</option>
+              <option value="月：上半身A">月：上半身A（胸・肩・三頭）</option>
+              <option value="火：休養">火：休養日</option>
+              <option value="水：下半身">水：下半身（脚・臀部）</option>
+              <option value="木：休養">木：休養日</option>
+              <option value="金：上半身B">金：上半身B（背中・二頭）</option>
+            </select>
+          </div>
+          <div class="frow">
+            <div><label class="flbl">体重 (kg)</label><input type="number" id="log-wt" placeholder="68.0" step="0.1" min="40" max="150"></div>
+            <div><label class="flbl">達成度</label>
+              <select id="log-rating">
+                <option value="3">★★★ 完璧</option>
+                <option value="2" selected>★★☆ まあまあ</option>
+                <option value="1">★☆☆ きつかった</option>
+              </select>
+            </div>
+          </div>
+          <div class="fgrp">
+            <label class="flbl">メモ</label>
+            <textarea id="log-note" placeholder="例：プッシュアップ 4×12、膝付きなしで完遂"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="fsec">
+        <div class="fcard">
+          <div class="pfc-ai-title">
+            食事記録
+            <span class="ai-badge">AI PFC推定</span>
+          </div>
+          <div class="notice">① 食事名を入力して「推定」→ 質問文がクリップボードにコピー<br>② チャット欄に貼り付けて送信 → Claudeの返信のPFC数値を入力</div>
+          <div style="margin-top:8px">
+            <div class="meal-add-row">
+              <select id="add-timing">
+                <option value="朝食">朝食</option>
+                <option value="昼食">昼食</option>
+                <option value="夕食" selected>夕食</option>
+                <option value="補食">補食</option>
+                <option value="間食">間食</option>
+              </select>
+              <input type="text" id="add-name" placeholder="例：鶏むね丼＋みそ汁" onkeydown="if(event.key==='Enter')addMeal()">
+              <button id="add-btn" onclick="addMeal()" style="touch-action:manipulation;-webkit-appearance:none;min-height:44px;padding:0 16px">推定</button>
+            </div>
+            <div id="manual-row" style="display:none;margin-bottom:8px;background:var(--paper3);border-radius:var(--rs);padding:9px;border:1.5px solid var(--rule2)">
+              <div id="manual-note" style="font-size:11px;line-height:1.5;margin-bottom:7px;color:var(--rule2)">Claudeの返信から数値をここに入力 →</div>
+              <div style="display:flex;gap:5px;margin-bottom:7px">
+                <div style="flex:1"><label class="flbl">P(g)</label><input type="number" id="man-p" placeholder="0" min="0" max="300"></div>
+                <div style="flex:1"><label class="flbl">C(g)</label><input type="number" id="man-c" placeholder="0" min="0" max="600"></div>
+                <div style="flex:1"><label class="flbl">F(g)</label><input type="number" id="man-f" placeholder="0" min="0" max="200"></div>
+              </div>
+              <button onclick="confirmMeal()" style="width:100%;padding:12px;border:none;background:var(--ink);color:var(--paper);border-radius:var(--rs);font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;margin-bottom:6px;min-height:48px;touch-action:manipulation;-webkit-appearance:none">確定して追加</button>
+              <button onclick="cancelMeal()" style="width:100%;padding:10px;border:1px solid var(--rule);background:transparent;border-radius:var(--rs);font-size:13px;cursor:pointer;color:var(--rule2);font-family:'Noto Sans JP',sans-serif;min-height:42px;touch-action:manipulation;-webkit-appearance:none">キャンセル</button>
+            </div>
+            <div id="meal-list"></div>
+            <div class="pfc-totals">
+              <div class="pt"><div class="pt-l">P</div><div class="pt-v" id="tot-p" style="color:var(--red)">0g</div></div>
+              <div class="pt"><div class="pt-l">C</div><div class="pt-v" id="tot-c" style="color:var(--grn)">0g</div></div>
+              <div class="pt"><div class="pt-l">F</div><div class="pt-v" id="tot-f" style="color:var(--amb)">0g</div></div>
+              <div class="pt"><div class="pt-l">kcal</div><div class="pt-v" id="tot-k">0</div></div>
+            </div>
+            <div class="pfc-progress">
+              <div class="pfc-progress-row"><span>P目標 136g</span><span id="p-pct">0%</span></div>
+              <div class="pfc-bar-track"><div class="pfc-bar-fill" id="p-bar" style="width:0%"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fsec"><button class="btn btn-ink" onclick="saveLog()">記録を保存する</button></div>
+
+      <div class="lbl">Claudeへ送るテンプレ</div>
+      <div class="tmpl-wrap">
+        <div class="tmpl-hdr"><span>📋 今日の記録テンプレ</span><button class="copy-btn" onclick="copyTmpl()">COPY</button></div>
+        <div class="tmpl-body">
+          <div style="font-size:10px;color:#888;font-family:'DM Mono',monospace;margin-bottom:4px">コピーしてこのチャットに貼り付けるとアドバイスをもらえます</div>
+          <pre id="tmpl-text"></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── HISTORY PAGE ── -->
+    <div id="pg-hist" class="pg">
+      <div class="lbl">過去の記録</div>
+      <div id="hist-list" style="padding-top:8px"><div class="empty">記録を始めると表示されます</div></div>
+    </div>
+
+  </div><!-- .scroll -->
+
+  <!-- BOTTOM NAV -->
+  <nav class="bnav">
+    <button class="nb on" onclick="nav('week',this)"><span class="nb-ico">📅</span>週間</button>
+    <button class="nb" onclick="nav('log',this)"><span class="nb-ico">✏️</span>記録</button>
+    <button class="nb" onclick="nav('hist',this)"><span class="nb-ico">📚</span>履歴</button>
+  </nav>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════
+const START = '2026-05-23'; // 土曜開始
+const DOW = ['日','月','火','水','木','金','土'];
+
+// ═══════════════════════════════════════════════
+// PLAN DATA
+// ═══════════════════════════════════════════════
+const WO = {
+  1:{label:'上半身A',color:'#b83232',ex:[
+    {n:'プッシュアップ',s:'4セット×8〜15回',how:'肩幅より少し広めに手をつく。頭〜かかとを一直線に保ち、胸が床スレスレまでゆっくり2〜3秒で下ろし、1秒で上げる。',tip:'腰が落ちないように腹に力を入れる。8回もできなければ膝付きでOK。'},
+    {n:'パイクプッシュアップ',s:'3セット×8〜12回',how:'お尻を高く上げて体を逆V字に。頭を床に近づけるように肘を曲げて下ろし、肩で押し上げる。',tip:'肩を耳から遠ざける意識で押す。三角筋（肩前部）に効かせる種目。'},
+    {n:'ディップス（椅子）',s:'3セット×10〜15回',how:'椅子の端に手をついて足を前に伸ばす。肘を後ろに曲げて2秒で体を下ろし、肘90度まで来たら伸ばす。',tip:'肘は体に沿わせる。外に開くと肩を痛める。最初は膝を曲げて楽にしてOK。'},
+    {n:'ワイドプッシュアップ',s:'3セット×8〜12回',how:'肩幅の1.5倍に手を広げて腕立て。指先は少し外向き。',tip:'胸の真ん中に向かって絞るイメージで押し上げる。大胸筋外側に効く。'},
+  ]},
+  3:{label:'下半身',color:'#1e6b3a',ex:[
+    {n:'スクワット',s:'4セット×15〜20回',how:'足幅は肩幅、つま先30度外向き。お尻を後ろに引きながら2〜3秒で太ももが床と平行になるまで下ろし、かかとで地面を押して立ち上がる。',tip:'膝がつま先と同じ方向を向くこと。背筋まっすぐ、目線は正面。椅子に座るような感覚。'},
+    {n:'ブルガリアンスクワット',s:'3セット×各脚10回',how:'椅子に後ろ足の甲を乗せ、前足だけで腰を真下に落とす。後ろ膝が床スレスレになるまで下ろす。',tip:'前足の膝がつま先方向と同じ向き。バランス取れなければ壁に手を添えていい。'},
+    {n:'グルートブリッジ',s:'3セット×15〜20回',how:'仰向けで膝を立て、かかとは膝の少し後ろに。腰を上げて頭〜膝が一直線になったら2秒キープ。お尻を強く絞る。',tip:'頂点で「2秒止めてお尻を絞る」が最重要。さぼると効果半減。'},
+    {n:'プランク',s:'3セット×30〜60秒',how:'肘を肩の真下について前腕を床に。頭〜かかとを一直線にキープ。',tip:'呼吸を止めない。腰が落ちる/上がるはNG。崩れたら即中止。'},
+    {n:'カーフレイズ',s:'3セット×20〜25回',how:'壁に軽く手を添えて立ち、つま先立ちでできるだけ高く上げ、3秒かけてゆっくり下ろす。',tip:'段差の端で行うと可動域が広がってさらに効果的。'},
+  ]},
+  5:{label:'上半身B',color:'#5c3487',ex:[
+    {n:'斜め懸垂（テーブルロウ）',s:'4セット×できる回数',how:'頑丈な机の縁を握り、体を斜めに倒して足を前に出す。胸を机に近づけるよう2秒で引き上げる。',tip:'肩甲骨を背中の真ん中に寄せる意識。腕の力でなく背中で引く。机が動かないか必ず確認。'},
+    {n:'リバースプッシュアップ',s:'3セット×10〜15回',how:'仰向けで膝を立て、手を肩の横につく。腕は曲げず肩甲骨だけを床に押しつけて上体を浮かせる。',tip:'肩甲骨を「ポケットに入れる」感覚を覚える地味だが重要な種目。'},
+    {n:'バックエクステンション',s:'3セット×12〜15回',how:'うつ伏せで手を頭の後ろに。2秒かけて上体を起こし、2秒で下ろす。胸が床から少し離れる程度でOK。',tip:'腰を「反る」のでなく「起こす」イメージ。痛みが出たら即中止。'},
+    {n:'クランチ',s:'3セット×15〜20回',how:'仰向けで膝を立て、手を耳の横に。息を吐きながら肩甲骨が床から離れる程度まで丸めて上げ、頂点で1〜2秒止める。',tip:'首を引っ張らない。「天井を見たまま」上体を丸める。量より収縮を感じる質。'},
+  ]},
+  6:{label:'腹筋+有酸素',color:'#1b4f82',ex:[
+    {n:'プランク',s:'3セット×30〜60秒',how:'肘を肩の真下について前腕を床に。頭〜かかとを一直線にキープ。',tip:'呼吸を止めない。崩れたら即中止。'},
+    {n:'クランチ',s:'3セット×15〜20回',how:'仰向け膝立てで手は耳の横。腹筋で肩甲骨が浮く程度まで丸めて上げる。',tip:'首ではなく腹で上げる。頂点で1〜2秒止めて収縮を感じる。'},
+    {n:'レッグレイズ',s:'3セット×10〜15回',how:'仰向けで両脚を伸ばし、かかとを10cmまでゆっくり下げて上げる。腰は床に押しつける。',tip:'腰が浮く場合は可動域を小さく。腰痛がある人は無理しない。'},
+    {n:'ウォーキング',s:'30〜40分',how:'いつもより少し早歩きで。腕を振って大股気味に。',tip:'脂肪燃焼と気分転換が目的。強度は低くていい。'},
+  ]},
+};
+
+const FOOD = {
+  // ── 土曜：腹筋+有酸素日 ── 開始日
+  6:{meals:[
+    {t:'朝食',ts:'08:00',n:'目玉焼き2個 × トースト2枚 × 低脂肪牛乳 × バナナ',d:'食パン2枚にバター少々・塩こしょう。休日はゆっくりトースト朝食。',a:'卵3個スクランブル＋ご飯（0.5合弱）でも可',p:28,c:58,f:14},
+    {t:'間食',ts:'10:00',n:'ギリシャヨーグルト × はちみつ × くるみ',d:'くるみはオメガ3脂肪酸が豊富。トレ後の炎症を抑える効果も。',a:'バナナ1本でも可',p:14,c:24,f:8},
+    {t:'昼食',ts:'12:30',n:'サラダチキン丼（ご飯0.5合） × 半熟卵 × 海苔',d:'市販のサラダチキン（プレーン or バジル）を裂いてご飯に乗せ、半熟卵と刻み海苔を添える。ごまドレかポン酢で。週末の昼は手抜きで栄養確保。',a:'自作する場合：鶏むね200gを塩茹で',p:42,c:65,f:6},
+    {t:'夕食',ts:'19:00',n:'鶏もも肉のトマト煮込み × ご飯（0.5合） × バゲット添え',d:'鶏もも300gに塩こしょう→フライパンで皮目から焼き目をつける。玉ねぎ・にんにく・トマト缶1個・ローリエ・コンソメ少々を加えて20分煮込む。仕上げに粉チーズとパセリ。週末の洋食。',a:'鶏もも→鶏むね300gで低脂質版に',p:48,c:55,f:18},
+  ]},
+  // ── 日曜：完全休養日 ──
+  0:{meals:[
+    {t:'朝食',ts:'08:00',n:'だし巻き卵 × ご飯（0.5合弱） × 納豆',d:'みそ汁：なめこ50g・豆腐80g・みょうが1本。週1回の丁寧な和食朝食。だし巻きは卵3個＋だし大3・醤油小1・みりん小1で巻く。',a:'',p:32,c:52,f:12},
+    {t:'間食',ts:'10:30',n:'ゆで卵2個 × バナナ1本',d:'',a:'',p:14,c:28,f:5},
+    {t:'昼食',ts:'12:00',n:'昨夜のトマト煮込みリメイク × パスタ or ご飯',d:'昨日の鶏トマト煮込みの残りをパスタソースに。茹でたパスタ100gに絡めるだけ。または白ご飯にかけてドリア風に。',a:'残ってなければサラダチキン丼でも可',p:38,c:65,f:10},
+    {t:'夕食',ts:'19:00',n:'豚の生姜焼き × ご飯（0.5合） × キャベツ千切り',d:'豚ロース150gに薄力粉を軽くまぶしてフライパンで焼く→醤油大2・みりん大2・酒大1・おろし生姜大1のタレを絡める。キャベツ千切りをたっぷり添えて。みそ汁：豆腐80g・わかめ・長ねぎ。月曜トレに備えて炭水化物確保。',a:'豚ロース→豚もも（低脂質）でも可',p:36,c:55,f:14},
+  ]},
+  // ── 月曜：上半身Aトレ日 ──
+  1:{meals:[
+    {t:'朝食',ts:'07:00',n:'卵3個スクランブル × ご飯（0.5合） × 納豆',d:'みそ汁：豆腐80g・わかめ2g・長ねぎ10g ／ 前日に具を切り置きしておくと朝5分で完成',a:'',p:34,c:62,f:14},
+    {t:'昼食',ts:'12:30',n:'生姜焼き弁当（ご飯0.5合弱） × 卵焼き',d:'日曜夜の生姜焼きを多めに作って弁当に。卵焼き1個とブロッコリーで彩り。冷めても美味しい定番。',a:'コンビニ：サラダチキン＋おにぎり1個',p:38,c:55,f:14},
+    {t:'夕食',ts:'19:00',n:'唐揚げ定食（ご飯1合） × キャベツ千切り × みそ汁',d:'鶏もも300gを醤油大2・酒大1・みりん大1・おろしにんにく・生姜各小1で15分漬け→片栗粉まぶして170℃で4分。二度揚げで衣カリッと。キャベツ100g千切りを添えて。みそ汁：豆腐＋わかめ。',a:'もも肉が脂質多めなら半量を鶏むねに。揚げ物→焼くだけの照り焼きでも可',p:56,c:130,f:24},
+    {t:'補食',ts:'21:00',n:'ゆで卵2個 × 低脂肪ヨーグルト100g',d:'トレ後30分以内',a:'プロテイン1杯でも可',p:20,c:8,f:8},
+  ]},
+  // ── 火曜：休養日 ──
+  2:{meals:[
+    {t:'朝食',ts:'07:00',n:'卵3個スクランブル × ご飯（0.5合弱） × 納豆',d:'みそ汁：豆腐80g・わかめ2g・長ねぎ10g',a:'',p:34,c:52,f:14},
+    {t:'昼食',ts:'12:30',n:'唐揚げ弁当（ご飯0.5合弱） × ブロッコリー',d:'昨日の唐揚げが残っていれば弁当に。レンジで温めるだけ。冷凍ブロッコリー添え。',a:'コンビニ：唐揚げ棒＋おにぎり',p:36,c:50,f:14},
+    {t:'夕食',ts:'19:00',n:'豚キムチ × ご飯（0.5合弱） × 温玉',d:'豚バラ150g・キムチ100g・玉ねぎ半個・ニラ少々をごま油で炒めて醤油少々で味付け。温玉を乗せて辛さマイルドに。みそ汁：豆腐・わかめ。',a:'豚バラ→豚もも（低脂質）でも可',p:32,c:55,f:18},
+  ]},
+  // ── 水曜：下半身トレ日 ──
+  3:{meals:[
+    {t:'朝食',ts:'07:00',n:'卵3個スクランブル × ご飯（0.5合） × 納豆',d:'みそ汁：豆腐80g・わかめ2g・長ねぎ10g',a:'',p:34,c:62,f:14},
+    {t:'昼食',ts:'12:30',n:'サラダチキン丼（ご飯0.5合弱） × 温玉',d:'市販のサラダチキンを裂いてご飯に乗せ、温玉とごまドレで。シンプルだが必要P確保できる。',a:'コンビニで完結OK',p:38,c:55,f:6},
+    {t:'夕食',ts:'19:00',n:'チキンカレー（ご飯1合） × 福神漬け × ゆで卵',d:'鶏もも300gを一口大に切って玉ねぎ2個・にんにく・生姜と炒める。市販ルーで4人分まとめて作る。今夜＋明日3食分を確保。スパイス（クミン・ガラムマサラ）を足すと本格的に。',a:'鶏もも→鶏むねで脂質を抑えられる',p:42,c:130,f:18},
+    {t:'補食',ts:'21:00',n:'ゆで卵2個 × 低脂肪ヨーグルト100g',d:'トレ後30分以内',a:'',p:20,c:8,f:8},
+  ]},
+  // ── 木曜：休養日（カレー消費DAY） ──
+  4:{meals:[
+    {t:'朝食',ts:'07:00',n:'カレー × ご飯（0.5合弱） × 目玉焼き',d:'昨日のカレーは一晩おくと味が馴染んで旨さ増し。目玉焼きを乗せて焼きカレー風に。',a:'',p:38,c:55,f:14},
+    {t:'昼食',ts:'12:30',n:'カレー弁当 × ご飯（0.5合弱）',d:'タッパーに詰めるだけ。職場でレンジ可能ならこれが最も楽。スプーン持参を忘れずに。',a:'コンビニ：レトルトカレー＋おにぎり',p:34,c:55,f:14},
+    {t:'夕食',ts:'19:00',n:'カレードリア風 × ご飯（0.5合） × サラダ',d:'残りカレーをご飯にかけて、チーズ20gと卵1個を乗せてトースターで5分焼く。最後の一食を豪華にアレンジ。レタス・トマトの簡単サラダ添え。',a:'チーズなければ目玉焼きカレーでも可',p:38,c:65,f:18},
+  ]},
+  // ── 金曜：上半身Bトレ日 ──
+  5:{meals:[
+    {t:'朝食',ts:'07:00',n:'卵3個スクランブル × ご飯（0.5合） × 納豆',d:'みそ汁：豆腐80g・わかめ2g・長ねぎ10g',a:'',p:34,c:62,f:14},
+    {t:'昼食',ts:'12:30',n:'サラダチキン丼（ご飯0.5合弱） × 半熟卵',d:'市販のサラダチキンと半熟卵を温かいご飯に乗せ、ごまドレで。週後半の昼はシンプルに。',a:'コンビニ：サラダチキン＋おにぎり1個',p:38,c:55,f:5},
+    {t:'夕食',ts:'19:00',n:'煮込みハンバーグ × ご飯（1合） × 温野菜',d:'合い挽き肉200g・玉ねぎみじん切り・卵1個・パン粉大2でタネを作り成形→フライパンで両面焼き。ケチャップ大2・ウスター大1・赤ワイン大2（or 水）で煮込みソース。ブロッコリー・にんじんを添えて。2個作って翌日昼にも。',a:'合い挽き→鶏むねミンチで低脂質版に',p:44,c:130,f:22},
+    {t:'補食',ts:'21:00',n:'ゆで卵2個 × 低脂肪ヨーグルト100g',d:'トレ後30分以内',a:'',p:20,c:8,f:8},
+  ]},
+};
+
+function getPrep(nextDow){
+  const r={rice:null,items:[],cook:[]};
+  if(nextDow===6){ // → 土曜（腹筋）
+    r.rice={amt:'1合',note:'昼のサラダチキン丼用 0.5合＋夜のトマト煮込み用 0.5合。'};
+    r.items=['サラダチキン1〜2袋を購入（土曜昼用）','鶏もも300g・トマト缶1個・玉ねぎ・にんにくを準備（土曜夜のトマト煮込み用）','ギリシャヨーグルト・バナナ・くるみを確認'];
+    r.cook=[];
+  }else if(nextDow===0){ // → 日曜（休養）
+    r.rice={amt:'1.5合',note:'朝0.5合弱＋昼0.5合弱（パスタなら不要）＋夜0.5合。'};
+    r.items=['昨夜のトマト煮込みの残りを確認（日曜昼のリメイク用）','豚ロース150gを購入（日曜夜の生姜焼き用）','みそ汁の具：なめこ50g・豆腐80g・みょうが1本（朝食用）'];
+    r.cook=['ゆで卵2〜3個を茹でておく','生姜焼きは多めに作って月曜昼の弁当にも回す'];
+  }else if(nextDow===1){ // → 月曜（上半身A）
+    r.rice={amt:'1.5合',note:'朝0.5合＋昼0.5合弱（生姜焼き弁当）＋夕食1合。残りは冷凍。'};
+    r.items=['ゆで卵を3〜4個茹でておく（補食用含む）','みそ汁の具を切っておく：豆腐80g 1cm角・長ねぎ10g輪切り・わかめ2g計量','日曜夜の生姜焼きを多めに作って弁当用にタッパーへ','鶏もも300gを唐揚げタレ（醤油大2・酒大1・みりん大1・にんにく・生姜）に漬け込んでおく'];
+    r.cook=['片栗粉と揚げ油を準備。明日帰宅後すぐ揚げられるように。'];
+  }else if(nextDow===2){ // → 火曜（休養）
+    r.rice={amt:'1.5合',note:'朝0.5合弱＋昼0.5合弱＋夜0.5合弱。1.5合炊くと安心。'};
+    r.items=['月曜の唐揚げを2〜3個タッパーに分けておく（火曜昼用）','ゆで卵を2個茹でておく','みそ汁の具を切っておく：豆腐80g・わかめ2g','キムチ・豚バラ150g・ニラを確認（火曜夜の豚キムチ用）'];
+    r.cook=[];
+  }else if(nextDow===3){ // → 水曜（下半身）
+    r.rice={amt:'1.5合',note:'朝0.5合＋昼0.5合弱＋夕食1合（カレー用）。残りは冷凍してカレー消費日に使う。'};
+    r.items=['ゆで卵を3〜4個茹でておく（補食＋木曜朝目玉焼き用）','玉ねぎ2個・にんにく・生姜を準備（カレー用）','鶏もも300gと市販カレールーを確認'];
+    r.cook=['カレーは今夜まとめて4人分作る。今夜＋木曜の朝・昼・夜の4食分。'];
+  }else if(nextDow===4){ // → 木曜（休養、カレー消費日）
+    r.rice={amt:'1合',note:'朝0.5合弱＋昼0.5合弱＋夜0.5合 ＝ 約1.5合。1合では足りないので1.5合炊くと安心。'};
+    r.items=['カレーが冷蔵庫にあるか確認（昨日作り置き済みのはず）','ピザ用チーズ20gを買っておく（木曜夜のカレードリア用）','卵2個を確保（朝の目玉焼き＋夜のドリア用）'];
+    r.cook=['夜のカレードリアにレタス・トマトを使うので野菜を確認。'];
+  }else if(nextDow===5){ // → 金曜（上半身B）
+    r.rice={amt:'1.5合',note:'朝0.5合＋昼0.5合弱＋夕食1合。残りは冷凍。'};
+    r.items=['ゆで卵を3〜4個茹でておく（補食用含む）','みそ汁の具：豆腐80g・わかめ2g・長ねぎ10g','合い挽き肉200gと玉ねぎを確認（ハンバーグ用）'];
+    r.cook=['ハンバーグのタネを成形して冷蔵庫に入れておくと帰宅後すぐ焼ける。合い挽き肉200g＋玉ねぎみじん切り＋卵1個＋パン粉大2。'];
+  }
+  return r;
+}
+
+// ═══════════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════════
+const LS_KEY='mm_v4';
+function getAll(){try{return JSON.parse(localStorage.getItem(LS_KEY)||'{}')}catch(e){return {}}}
+function setAll(d){try{localStorage.setItem(LS_KEY,JSON.stringify(d))}catch(e){}}
+function today(){return new Date().toISOString().slice(0,10)}
+function getLog(dt){const a=getAll();return a[dt]||{workout:null,meals:[],wt:null,note:'',rating:2,prep:{}}}
+function saveLog2(dt,d){const a=getAll();a[dt]=d;setAll(a)}
+
+// ═══════════════════════════════════════════════
+// HEADER
+// ═══════════════════════════════════════════════
+function renderHdr(){
+  const d=new Date(),dow=d.getDay();
+  const diff=Math.floor((d-new Date(START))/86400000);
+  const day1=Math.max(1,diff+1),wk=Math.max(1,Math.ceil(day1/7)),ph=wk<=12?1:wk<=32?2:3;
+  document.getElementById('hdr-date').textContent=d.toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+  document.getElementById('hdr-phase').textContent=`PH${ph} W${wk}`;
+  document.getElementById('hdr-title').textContent=WO[dow]?WO[dow].label:(dow===0?'完全休養日':'休養日');
+  document.getElementById('hdr-sub').textContent=`開始${day1}日目 · P目標136g/日 · 68kg`;
+}
+
+// ═══════════════════════════════════════════════
+// WEEK PAGE
+// ═══════════════════════════════════════════════
+function renderWeek(){
+  const today_d=new Date(),todDow=today_d.getDay();
+  // 「今週の土曜」を起点とする週ビュー（土曜開始）
+  // まず今週の土曜の日付を計算
+  const satOffset = todDow===6 ? 0 : -((todDow+1)%7);
+  // todDow=0(日) → -1, 1(月)→-2, 2(火)→-3, ... 6(土)→0
+  // つまり satOffset = todDow===6 ? 0 : -(todDow+1)
+  const sat = new Date(today_d);
+  sat.setDate(today_d.getDate() + (todDow===6 ? 0 : -(todDow+1)));
+  // 土・日・月・火・水・木・金 を生成
+  const order=[6,0,1,2,3,4,5];
+  const days = order.map((di,i)=>{
+    const date = new Date(sat);
+    date.setDate(sat.getDate() + i);
+    const dateStr = date.toISOString().slice(0,10);
+    const todayDateStr = today_d.toISOString().slice(0,10);
+    const isToday = dateStr === todayDateStr;
+    const isPast = date < today_d && !isToday;
+    return {dow:di, date, isToday, isPast};
+  });
+
+  const track=document.getElementById('wtrack');
+  track.innerHTML=days.map(({dow,date,isToday,isPast})=>{
+    const wo=WO[dow],food=FOOD[dow];
+    const dd=date.getDate(),dj=DOW[dow];
+    const bc=wo?wo.color:'#888';
+    const tP=food?food.meals.reduce((s,m)=>s+(m.p||0),0):0;
+    const tC=food?food.meals.reduce((s,m)=>s+(m.c||0),0):0;
+    const tF=food?food.meals.reduce((s,m)=>s+(m.f||0),0):0;
+    const tK=Math.round(tP*4+tC*4+tF*9);
+    const exH=wo?wo.ex.map(e=>`<div class="exrow"><div class="exrow-head"><div class="exdot"></div><div class="exn">${e.n}</div><div class="exs">${e.s}</div></div>${e.how?`<div class="exhow">▸ ${e.how}</div>`:''}${e.tip?`<div class="extip">💡 ${e.tip}</div>`:''}</div>`).join(''):'<div style="font-size:10px;color:#aaa;padding:2px 0">筋肉が修復・成長する大切な日</div>';
+    const mlH=food?food.meals.map(m=>`<div class="mitem m${m.t}"><div class="mstrip">${m.ts} ${m.t}</div><div class="mbody"><div class="mname">${m.n}</div><div class="mdetail">${m.d}</div>${m.a?`<div class="malt">代替：${m.a}</div>`:''}<div class="mmacros"><span class="mpill">P${m.p}g</span><span class="mpill">C${m.c}g</span><span class="mpill">F${m.f}g</span></div></div></div>`).join(''):'';
+    return `<div class="dcard${isToday?' now':''}"><div class="dcard-hdr"><div class="dnum">${dd}</div><div class="dlwrap"><div class="dlname">${dj}曜${isToday?' ◀今日':isPast?' 終了':''}</div><div class="dltype">${wo?wo.label:'休養日'}</div></div><div class="dtag" style="background:${bc}18;color:${bc}">${wo?'トレ':'REST'}</div></div><div class="dcard-body"><div class="ex-lbl">筋トレ</div>${exH}<div class="msec"><div class="mlbl">食事 — P${tP} C${tC} F${tF} ${tK}kcal</div>${mlH}</div></div></div>`;
+  }).join('');
+
+  setTimeout(()=>{
+    const c=track.querySelector('.now');
+    if(c) track.parentElement.scrollLeft=Math.max(0,c.offsetLeft-16);
+  },80);
+
+  renderPrep();
+}
+
+function renderPrep(){
+  const today_d=new Date(),nextDow=(today_d.getDay()+1)%7;
+  const prep=getPrep(nextDow);
+  const log=getLog(today());const pt=log.prep||{};
+  let h=`<div class="prep-card"><div class="prep-hdr">🌙 明日（${DOW[nextDow]}曜）の準備</div><div class="prep-body">`;
+  if(prep.rice) h+=`<div class="prep-rice"><div class="prep-rice-ico">🍚</div><div><div style="font-size:9px;color:var(--rule2);margin-bottom:1px;font-family:'DM Mono',monospace">炊くお米</div><div class="prep-rice-amt">${prep.rice.amt}</div><div class="prep-rice-note">${prep.rice.note}</div></div></div>`;
+  if(prep.items.length){
+    h+=`<div class="prep-slbl">仕込みリスト</div>`;
+    h+=prep.items.map((t,i)=>`<div class="pitem"><input type="checkbox" id="pp${i}" ${pt['pp'+i]?'checked':''} onchange="togglePrep(this,'pp${i}')"><label for="pp${i}" class="${pt['pp'+i]?'ck':''}">${t}</label></div>`).join('');
+  }
+  if(prep.cook.length){
+    h+=`<div class="prep-slbl" style="margin-top:7px">調理メモ</div>`;
+    h+=prep.cook.map(c=>`<div class="cook-item">・${c}</div>`).join('');
+  }
+  h+=`</div></div>`;
+  document.getElementById('prep-sec').innerHTML=h;
+}
+
+function togglePrep(el,key){
+  const log=getLog(today());
+  if(!log.prep)log.prep={};
+  log.prep[key]=el.checked;
+  el.nextElementSibling.classList.toggle('ck',el.checked);
+  saveLog2(today(),log);
+}
+
+// ═══════════════════════════════════════════════
+// MEAL ENTRY (sendPrompt → manual PFC input)
+// ═══════════════════════════════════════════════
+let meals=[];
+let pendingMeal=null; // {id, timing, name}
+
+function addMeal(){
+  const name=document.getElementById('add-name').value.trim();
+  const timing=document.getElementById('add-timing').value;
+  if(!name){
+    alert('食事名を入力してください');
+    document.getElementById('add-name').focus();
+    return;
+  }
+
+  // Store pending meal
+  pendingMeal={id:Date.now(),timing,name};
+
+  // Copy prompt to clipboard
+  const prompt='「'+name+'」のPFC教えて（P/C/F gで）';
+  let copied=false;
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(prompt);
+      copied=true;
+    }else{
+      const ta=document.createElement('textarea');
+      ta.value=prompt;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      copied=true;
+    }
+  }catch(e){copied=false;}
+
+  // Show manual input row
+  const mr=document.getElementById('manual-row');
+  mr.style.display='block';
+  document.getElementById('man-p').value='';
+  document.getElementById('man-c').value='';
+  document.getElementById('man-f').value='';
+
+  // Update notice
+  const noteEl=document.getElementById('manual-note');
+  if(noteEl){
+    if(copied){
+      noteEl.innerHTML='<b style="color:var(--grn)">✓ クリップボードにコピー済み</b><br>' +
+        '<span style="font-size:10px;color:var(--rule2)">下のチャット欄に貼り付けて送信 → Claudeが返信した数値を入力してください</span>' +
+        '<div style="font-family:DM Mono,monospace;font-size:11px;background:white;padding:5px 7px;border-radius:3px;margin-top:5px;border:1px solid var(--rule);word-break:break-all">'+prompt+'</div>';
+    }else{
+      noteEl.innerHTML='<span style="color:var(--amb)">⚠ コピーできませんでした。下のテキストを手動でコピーしてください：</span>' +
+        '<div style="font-family:DM Mono,monospace;font-size:11px;background:white;padding:5px 7px;border-radius:3px;margin-top:5px;border:1px solid var(--rule);word-break:break-all;user-select:all">'+prompt+'</div>';
+    }
+  }
+
+  setTimeout(()=>document.getElementById('man-p').focus(),100);
+}
+
+function confirmMeal(){
+  if(!pendingMeal)return;
+  const p=parseInt(document.getElementById('man-p').value)||0;
+  const c=parseInt(document.getElementById('man-c').value)||0;
+  const f=parseInt(document.getElementById('man-f').value)||0;
+  meals.push({...pendingMeal,p,c,f});
+  pendingMeal=null;
+  document.getElementById('add-name').value='';
+  document.getElementById('manual-row').style.display='none';
+  renderMeals();updateTotals();updateTmpl();
+}
+
+function cancelMeal(){
+  pendingMeal=null;
+  document.getElementById('manual-row').style.display='none';
+  document.getElementById('add-name').value='';
+}
+
+function removeMeal(id){
+  meals=meals.filter(m=>m.id!==id);
+  renderMeals();updateTotals();updateTmpl();
+}
+
+function renderMeals(){
+  const el=document.getElementById('meal-list');
+  if(!meals.length){el.innerHTML='';return;}
+  el.innerHTML=meals.map(m=>`
+    <div class="meal-input-row">
+      <div class="mit-body">
+        <div class="mit-timing">${m.timing}</div>
+        <div class="mit-name">${m.name}</div>
+        <div class="mit-pfc">
+          <span class="mit-pill p">P ${m.p}g</span>
+          <span class="mit-pill c">C ${m.c}g</span>
+          <span class="mit-pill f">F ${m.f}g</span>
+        </div>
+      </div>
+      <button class="mit-del" onclick="removeMeal(${m.id})">×</button>
+    </div>`).join('');
+}
+
+function updateTotals(){
+  const done=meals.filter(m=>!m.loading);
+  const tP=done.reduce((s,m)=>s+(m.p||0),0);
+  const tC=done.reduce((s,m)=>s+(m.c||0),0);
+  const tF=done.reduce((s,m)=>s+(m.f||0),0);
+  const tK=Math.round(tP*4+tC*4+tF*9);
+  document.getElementById('tot-p').textContent=tP+'g';
+  document.getElementById('tot-c').textContent=tC+'g';
+  document.getElementById('tot-f').textContent=tF+'g';
+  document.getElementById('tot-k').textContent=tK;
+  const pct=Math.min(100,Math.round(tP/136*100));
+  document.getElementById('p-pct').textContent=pct+'%';
+  document.getElementById('p-bar').style.width=pct+'%';
+}
+
+// ═══════════════════════════════════════════════
+// LOG SAVE
+// ═══════════════════════════════════════════════
+function saveLog(){
+  const day=document.getElementById('log-day').value;
+  const wt=parseFloat(document.getElementById('log-wt').value)||null;
+  const rating=parseInt(document.getElementById('log-rating').value);
+  const note=document.getElementById('log-note').value.trim();
+  if(!note&&!meals.length){alert('筋トレメモか食事を入力してください');return;}
+  const log=getLog(today());
+  log.workout={day,rating,note};
+  log.meals=[...meals];
+  if(wt)log.wt=wt;
+  saveLog2(today(),log);
+  updateTmpl();renderHist();
+  alert('保存しました！');
+}
+
+// ═══════════════════════════════════════════════
+// TEMPLATE
+// ═══════════════════════════════════════════════
+function updateTmpl(){
+  const d=new Date();
+  const diff=Math.floor((d-new Date(START))/86400000);
+  const wt=document.getElementById('log-wt').value||'未記録';
+  const day=document.getElementById('log-day').value;
+  const rating=parseInt(document.getElementById('log-rating').value);
+  const note=document.getElementById('log-note').value||'特になし';
+  const done=meals.filter(m=>!m.loading);
+  const tP=Math.round(done.reduce((s,m)=>s+(m.p||0),0));
+  const tC=Math.round(done.reduce((s,m)=>s+(m.c||0),0));
+  const tF=Math.round(done.reduce((s,m)=>s+(m.f||0),0));
+  const tK=Math.round(tP*4+tC*4+tF*9);
+  const ml=meals.length?meals.map(m=>`  ${m.timing}：${m.name}${m.p!=null?` (P${m.p}/C${m.c}/F${m.f})`:' (推定中)'}`).join('\n'):'  未記録';
+  document.getElementById('tmpl-text').textContent=`📋 ${d.toLocaleDateString('ja-JP',{month:'long',day:'numeric',weekday:'short'})} の記録
+─────────────────
+【基本情報】
+・開始${Math.max(1,diff+1)}日目
+・体重：${wt}kg
+
+【筋トレ】
+・メニュー：${day}
+・達成度：${'★'.repeat(rating)+'☆'.repeat(3-rating)}
+・メモ：${note}
+
+【食事】
+${ml}
+・合計：P${tP}g / C${tC}g / F${tF}g / ${tK}kcal
+・P目標(136g)達成率：${Math.round(tP/136*100)}%
+
+【今日の感想・気になること】
+（ここに追記してClaudeに送る）`;
+}
+
+function copyTmpl(){
+  const text=document.getElementById('tmpl-text').textContent;
+  navigator.clipboard.writeText(text)
+    .then(()=>alert('コピーしました！\nこのチャットに貼り付けてください'))
+    .catch(()=>{
+      const ta=document.createElement('textarea');ta.value=text;
+      document.body.appendChild(ta);ta.select();
+      document.execCommand('copy');document.body.removeChild(ta);
+      alert('コピーしました！');
+    });
+}
+
+// ═══════════════════════════════════════════════
+// HISTORY
+// ═══════════════════════════════════════════════
+function renderHist(){
+  const all=getAll(),keys=Object.keys(all).sort().reverse();
+  const el=document.getElementById('hist-list');
+  if(!keys.length){el.innerHTML='<div class="empty">記録を始めると表示されます</div>';return;}
+  el.innerHTML=keys.map(k=>{
+    const log=all[k];
+    const d2=new Date(k+'T00:00:00');
+    const lbl=d2.toLocaleDateString('ja-JP',{month:'short',day:'numeric',weekday:'short'});
+    const done=(log.meals||[]).filter(m=>m.p!=null);
+    const tP=done.reduce((s,m)=>s+(m.p||0),0);
+    const wo=log.workout;
+    return `<div class="hist-item"><div class="hist-date">${lbl}</div><div class="hist-title">${wo?wo.day:'食事のみ'} ${wo?'★'.repeat(wo.rating)+'☆'.repeat(3-wo.rating):''}</div><div class="hist-body">${wo&&wo.note?wo.note+'<br>':''}${tP?`P${Math.round(tP)}g記録`:'食事未記録'}${log.wt?` · ${log.wt}kg`:''}</div></div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════════
+function nav(id,btn){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  document.getElementById('pg-'+id).classList.add('on');
+  btn.classList.add('on');
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(id==='week')renderWeek();
+  if(id==='hist')renderHist();
+  if(id==='log')updateTmpl();
+}
+
+// ═══════════════════════════════════════════════
+// INIT (with error visibility for debugging)
+// ═══════════════════════════════════════════════
+window.addEventListener('error',function(e){
+  const banner=document.createElement('div');
+  banner.style.cssText='position:fixed;top:0;left:0;right:0;background:#b83232;color:white;padding:8px 12px;font-size:12px;z-index:9999;font-family:monospace';
+  banner.textContent='JSエラー: '+e.message+' @'+e.lineno;
+  document.body.appendChild(banner);
+});
+
+try{
+  renderHdr();
+}catch(e){alert('renderHdr失敗: '+e.message);}
+try{
+  renderWeek();
+}catch(e){alert('renderWeek失敗: '+e.message);}
+try{
+  updateTmpl();
+}catch(e){alert('updateTmpl失敗: '+e.message);}
+</script>
+</body>
+</html>
